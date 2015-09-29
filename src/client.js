@@ -8,14 +8,17 @@ import createHistory from 'history/lib/createBrowserHistory';
 import createLocation from 'history/lib/createLocation';
 import createStore from './redux/create';
 import ApiClient from './helpers/ApiClient';
+import ReduxResolver from './helpers/universalReduxResolver';
 import universalRouter from './helpers/universalRouter';
 import io from 'socket.io-client';
 
 const history = createHistory();
 const client = new ApiClient();
+const resolver = new ReduxResolver();
 
 const dest = document.getElementById('content');
 const store = createStore(client, window.__data);
+store.resolver = resolver;
 
 function initSocket() {
   const socket = io('', {path: '/api/ws', transports: ['polling']});
@@ -38,6 +41,8 @@ const render = (loc, hist, str, preload) => {
   return universalRouter(loc, hist, str, preload)
     .then(({component}) => {
       ReactDOM.render(component, dest);
+      resolver.clear();
+
       if (__DEVTOOLS__) {
         const { DevTools, DebugPanel, LogMonitor } = require('redux-devtools/lib/react');
         ReactDOM.render(<div>
